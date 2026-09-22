@@ -61,7 +61,17 @@ const faqs = [
 
 export default function Home(){
   const [menu,setMenu]=useState(false); const [selected,setSelected]=useState<Game|null>(null); const [allGames,setAllGames]=useState(false); const [audience,setAudience]=useState<"player"|"admin">("player"); const [siteData,setSiteData]=useState<SiteData>({content:{},media:{},testimonials:[]});
-  useEffect(()=>{fetch("/api/site-data",{cache:"no-store"}).then(r=>r.json()).then(setSiteData).catch(()=>{});},[]);
+  useEffect(()=>{
+    fetch("/api/site-data",{cache:"no-store"})
+      .then(async (response)=>{
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!data || typeof data.content !== "object" || typeof data.media !== "object" || !Array.isArray(data.testimonials)) return null;
+        return data;
+      })
+      .then((data)=>{ if (data) setSiteData(data); })
+      .catch(()=>{});
+  },[]);
   const featured=useMemo(()=>games.slice(0,4),[]); const image=(slot:string,fallback:string)=>siteData.media[slot]||fallback;
   return <main className="v2-site">
     <header className="v2-header"><a className="v2-brand" href="#inicio"><img src="/flanto-logo-new.webp" alt="" /><span>FLANTO <b>AI</b></span></a><nav className={menu?"open":""}><a href="#demo">Demonstração</a><a href="#jogos">Jogos</a><a href="#city">FLANTO City</a><a href="#ranking">Ranking</a><a href="/whitepaper">Whitepaper</a></nav><div className="v2-head-actions"><a href="/conta">Minha conta</a><a className="v2-primary small" href="https://wa.me/5569992308771" target="_blank" rel="noreferrer">Começar grátis</a></div><button className="v2-menu" onClick={()=>setMenu(!menu)} aria-label="Abrir menu">{menu?<X/>:<Menu/>}</button></header>
